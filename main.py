@@ -183,7 +183,7 @@ def main(page: ft.Page):
 
     target_input = ft.TextField(
         label="Target Wifi SSID", 
-        value="MyHomeNetwork",
+        value="realme 10 Pro+ 5G",
         hint_text="Enter SSID to auto-open page",
         border_radius=10
     )
