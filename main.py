@@ -88,20 +88,31 @@ class WifiApp:
 def main(page: ft.Page):
     page.title = "Wifi Manager"
     page.theme_mode = ft.ThemeMode.DARK
-    page.padding = 20
+    page.padding = 0
     page.window_width = 400
-    page.window_height = 700
+    page.window_height = 800
+    
+    # Modern Color Palette
+    BG_GRADIENT = ft.LinearGradient(
+        begin=ft.alignment.Alignment(-1, -1),
+        end=ft.alignment.Alignment(1, 1),
+        colors=["#1a1a2e", "#16213e", "#0f3460"]
+    )
+    CARD_BG = ft.Colors.WHITE_10
+    ACCENT_COLOR = "#e94560"
+    TEXT_COLOR = ft.Colors.WHITE
     
     wifi_app = WifiApp()
     
     # UI Components
-    status_text = ft.Text("Ready to scan", size=16, color=ft.Colors.GREY_400)
-    current_network_text = ft.Text("Not Connected", size=20, weight=ft.FontWeight.BOLD, color=ft.Colors.RED_400)
+    status_text = ft.Text("Ready to scan", size=14, color=ft.Colors.WHITE_70, italic=True)
+    current_network_text = ft.Text("Not Connected", size=24, weight=ft.FontWeight.BOLD, color=ACCENT_COLOR)
     
-    network_list = ft.ListView(expand=True, spacing=10, padding=10)
+    network_list = ft.ListView(expand=True, spacing=15, padding=20)
     
     def on_scan_click(e):
         status_text.value = "Scanning..."
+        scan_btn.content.controls[1].value = "Scanning..."
         scan_btn.disabled = True
         page.update()
         
@@ -112,30 +123,46 @@ def main(page: ft.Page):
             def update_ui():
                 network_list.controls.clear()
                 if not networks:
-                    network_list.controls.append(ft.Text("No networks found or scanning not supported."))
+                    network_list.controls.append(
+                        ft.Container(
+                            content=ft.Column([
+                                ft.Icon(ft.Icons.WIFI_OFF, size=50, color=ft.Colors.WHITE_54),
+                                ft.Text("No networks found", color=ft.Colors.WHITE_54)
+                            ], alignment=ft.MainAxisAlignment.CENTER, horizontal_alignment=ft.CrossAxisAlignment.CENTER),
+                            alignment=ft.alignment.Alignment(0, 0),
+                            padding=20
+                        )
+                    )
                 
                 for net in networks:
                     # Use generic wifi icon to avoid AttributeErrors
                     signal_icon = ft.Icons.WIFI
                     # Simple signal strength logic for icon color or opacity if needed
-                    # checking signal if available
                     signal = getattr(net, 'signal', -100)
                     
                     network_list.controls.append(
                         ft.Container(
                             content=ft.Row([
-                                ft.Icon(signal_icon, color=ft.Colors.WHITE),
+                                ft.Container(
+                                    content=ft.Icon(signal_icon, color=TEXT_COLOR, size=24),
+                                    padding=10,
+                                    bgcolor="#334aa3df",
+                                    border_radius=50
+                                ),
                                 ft.Column([
-                                    ft.Text(getattr(net, 'ssid', 'Unknown'), weight=ft.FontWeight.BOLD),
-                                    ft.Text(f"Signal: {signal} dBm", size=12, color=ft.Colors.GREY_500)
-                                ])
-                            ]),
-                            padding=10,
-                            bgcolor=ft.Colors.with_opacity(0.1, ft.Colors.WHITE),
-                            border_radius=10
+                                    ft.Text(getattr(net, 'ssid', 'Unknown'), weight=ft.FontWeight.BOLD, size=16, color=TEXT_COLOR),
+                                    ft.Text(f"Signal: {signal} dBm", size=12, color=ft.Colors.WHITE_60)
+                                ], spacing=2)
+                            ], alignment=ft.MainAxisAlignment.START, vertical_alignment=ft.CrossAxisAlignment.CENTER),
+                            padding=15,
+                            bgcolor=ft.Colors.WHITE_12,
+                            border_radius=15,
+                            animate=ft.animation.Animation(300, ft.AnimationCurve.EASE_OUT),
+                            on_hover=lambda e: e.control.update() # Placeholder for hover effect
                         )
                     )
                 status_text.value = f"Found {len(networks)} networks"
+                scan_btn.content.controls[1].value = "Scan Networks"
                 scan_btn.disabled = False
                 page.update()
             
@@ -150,7 +177,7 @@ def main(page: ft.Page):
             ssid = wifi_app.get_connected_ssid()
             if ssid:
                 current_network_text.value = ssid
-                current_network_text.color = ft.Colors.GREEN_400
+                current_network_text.color = "#4ade80" # Greenish
                 
                 # Check target
                 target = target_input.value
@@ -163,48 +190,94 @@ def main(page: ft.Page):
                     browser_opened = False
             else:
                 current_network_text.value = "Disconnected"
-                current_network_text.color = ft.Colors.RED_400
+                current_network_text.color = ACCENT_COLOR
                 browser_opened = False
             
             page.update()
             time.sleep(5)
 
-    scan_btn = ft.ElevatedButton(
-        "Scan Networks", 
-        icon=ft.Icons.WIFI_FIND if hasattr(ft.Icons, "WIFI_FIND") else ft.Icons.SEARCH, 
+    scan_btn = ft.Container(
+        content=ft.Row([
+            ft.Icon(ft.Icons.WIFI_FIND if hasattr(ft.Icons, "WIFI_FIND") else ft.Icons.SEARCH, color=TEXT_COLOR),
+            ft.Text("Scan Networks", size=16, weight=ft.FontWeight.W_600, color=TEXT_COLOR)
+        ], alignment=ft.MainAxisAlignment.CENTER),
         on_click=on_scan_click,
-        style=ft.ButtonStyle(
-            color=ft.Colors.WHITE,
-            bgcolor=ft.Colors.BLUE_600,
-            shape=ft.RoundedRectangleBorder(radius=10),
+        bgcolor="#4ecca3", # Teal-ish
+        padding=15,
+        border_radius=12,
+        shadow=ft.BoxShadow(
+            spread_radius=1,
+            blur_radius=15,
+            color="#664ecca3",
+            offset=ft.Offset(0, 4),
         ),
-        height=50
+        ink=True,
     )
 
     target_input = ft.TextField(
         label="Target Wifi SSID", 
         value="realme 10 Pro+ 5G",
         hint_text="Enter SSID to auto-open page",
-        border_radius=10
+        border_radius=12,
+        bgcolor=ft.Colors.WHITE_10,
+        border_color=ft.Colors.TRANSPARENT,
+        focused_border_color=ACCENT_COLOR,
+        text_style=ft.TextStyle(color=TEXT_COLOR),
+        label_style=ft.TextStyle(color=ft.Colors.WHITE_70)
     )
 
+    # Main Layout
     page.add(
-        ft.Column([
-            ft.Text("Wifi Monitor", size=30, weight=ft.FontWeight.BOLD),
-            ft.Container(height=20),
-            ft.Text("Connected To:", size=14, color=ft.Colors.GREY_400),
-            current_network_text,
-            ft.Container(height=20),
-            target_input,
-            ft.Container(height=10),
-            scan_btn,
-            status_text,
-            ft.Divider(color=ft.Colors.GREY_800),
-            ft.Text("Available Networks:", size=16, weight=ft.FontWeight.BOLD),
-            network_list
-        ], 
-        height=650, # constrain height
-        scroll=ft.ScrollMode.HIDDEN
+        ft.Container(
+            content=ft.Column([
+                # Header Section
+                ft.Container(
+                    content=ft.Column([
+                        ft.Text("Wifi Monitor", size=32, weight=ft.FontWeight.BOLD, color=TEXT_COLOR),
+                        ft.Container(height=10),
+                        ft.Container(
+                            content=ft.Column([
+                                ft.Text("Connected To:", size=12, color=ft.Colors.WHITE_60, weight=ft.FontWeight.BOLD),
+                                current_network_text,
+                            ]),
+                            padding=20,
+                            bgcolor=CARD_BG,
+                            border_radius=20,
+                            width=float("inf"),
+                        ),
+                    ]),
+                    padding=20
+                ),
+                
+                # Controls Section
+                ft.Container(
+                    content=ft.Column([
+                        target_input,
+                        ft.Container(height=10),
+                        scan_btn,
+                        ft.Container(height=5),
+                        ft.Container(content=status_text, alignment=ft.alignment.Alignment(0, 0)),
+                    ]),
+                    padding=ft.padding.only(left=20, right=20, bottom=10)
+                ),
+                
+                ft.Divider(color=ft.Colors.WHITE_24, thickness=1),
+                
+                # List Section
+                ft.Container(
+                    content=ft.Column([
+                        ft.Text("Available Networks", size=18, weight=ft.FontWeight.W_600, color=TEXT_COLOR),
+                        ft.Container(
+                            content=network_list,
+                            expand=True # Let list take remaining space
+                        )
+                    ]),
+                    padding=ft.padding.only(left=20, right=20, top=10),
+                    expand=True
+                )
+            ], spacing=0),
+            gradient=BG_GRADIENT,
+            expand=True,
         )
     )
 
