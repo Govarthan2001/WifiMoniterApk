@@ -18,9 +18,14 @@ jobs:
       with:
         python-version: '3.11'
 
+    - name: Configure Requirements for Android
+      run: |
+        # comtypes is Windows-only and will cause the build to fail on Linux/Android
+        # pywifi is also unsupported on Android, so we exclude it to prevent compilation errors
+        echo "flet" > requirements.txt
+
     - name: Install Dependencies
       run: |
-        pip install flet
         pip install -r requirements.txt
 
     - name: Setup Flutter
